@@ -1,15 +1,10 @@
 "# 25DSIT0155_ANNAHOMES" 
+
 Student Name: ANGELLA NAKIJJOBA
 
 Registration Number: 25DSIT0155
 
 Project Title: ANNA HOMES
-
-GitHub Repository Link; https://github.com/angelnaki/25DSIT0155_ANNAHOMES
-
-System Login Username:adminhomes@gmail.com
-
-System Login Password:admin1234
 
 BRIEF DESCRIPTION OF THE SYSTEM.
 ANNA HOMES IS A WEBSITE SHOWCASING A COLLECTION OF PREMIUM AIRBNB RENTAL PROPERTIES ACROSS UGANDA'S MOST DESIRABLE LOCATIONS.
