@@ -1,7 +1,40 @@
 <?php
 // session_start() MUST be at the VERY TOP, before ANY HTML or whitespace
 session_start();
-require 'connect.php';
+
+// ============================================================
+// PROJECT MILESTONE: From Static to Data-Driven
+// Step 2 — The Connection:
+//   Use db_connect.php as the single configuration file.
+//   It creates the $pdo object used by every query below.
+// ============================================================
+require 'db_connect.php'; // <-- single source of truth for DB config
+
+// ============================================================
+// Step 3 — The Dynamic Loop:
+//   Fetch ALL rows from tbl_content (our milestone table).
+//   The foreach loop below will inject each row into ONE
+//   shared HTML card template — no repeated static HTML needed.
+// ============================================================
+$stmt = $pdo->prepare("SELECT * FROM tbl_content ORDER BY location, title");
+$stmt->execute();
+$all_content = $stmt->fetchAll(); // returns array of associative arrays
+
+// Group rows by location so we can render one section per city
+$grouped = [];
+foreach ($all_content as $row) {
+    $grouped[$row['location']][] = $row;
+}
+
+// ============================================================
+// Location display config — controls section headings & icons.
+// Adding a new city to tbl_content? Just add it here too.
+// ============================================================
+$location_config = [
+    'Mukono'  => ['icon' => 'fa-map-pin',   'label' => 'Featured in Mukono'],
+    'Entebbe' => ['icon' => 'fa-water',     'label' => 'Entebbe lakeside retreats'],
+    'Jinja'   => ['icon' => 'fa-campground','label' => 'Jinja escapes'],
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -12,6 +45,8 @@ require 'connect.php';
     <!-- Font Awesome 6 (free) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* ... (all existing styles remain unchanged) ... */
+        /* Paste the entire <style> block from your original file here */
         * {
             margin: 0;
             padding: 0;
@@ -20,12 +55,12 @@ require 'connect.php';
         }
 
         :root {
-            --deep-navy: #1A2B3C;           /* deep navy - primary */
-            --soft-white: #F9F7F4;           /* soft white - background */
-            --champagne: #F7E6D0;             /* champagne - accent 1 */
-            --burgundy: #8B3A3A;               /* rich burgundy - accent 2 */
-            --pure-white: #FFFFFF;               /* pure white - cards */
-            --warm-sand: #E8DDD0;                 /* warm sand for depth */
+            --deep-navy: #1A2B3C;
+            --soft-white: #F9F7F4;
+            --champagne: #F7E6D0;
+            --burgundy: #8B3A3A;
+            --pure-white: #FFFFFF;
+            --warm-sand: #E8DDD0;
             --shadow: 0 25px 50px -12px rgba(26,43,60,0.2);
             --border-radius-card: 20px;
             --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -165,7 +200,6 @@ require 'connect.php';
             border: 1px solid rgba(247,230,208,0.3);
         }
 
-        /* Logout button - burgundy style */
         .logout-btn {
             color: var(--champagne) !important;
             font-weight: 500 !important;
@@ -773,389 +807,150 @@ require 'connect.php';
 </section>
 
 <div class="container">
+
+    <?php
+    // ================================================================
+    // PROJECT MILESTONE: The Dynamic Loop
+    // ----------------------------------------------------------------
+    // The three hard-coded Mukono / Entebbe / Jinja HTML blocks that
+    // used to live here have been DELETED and replaced by this single
+    // foreach loop.
+    //
+    // How it works:
+    //   1. We loop over each location key in $location_config.
+    //   2. For each location, we check if $grouped has any rows.
+    //   3. If yes, we loop over those rows with a foreach and inject
+    //      each row's data into ONE shared HTML card template.
+    //
+    // Success Criteria:
+    //   Add a new row to tbl_content in phpMyAdmin → it appears here
+    //   automatically. Zero HTML changes required.
+    // ================================================================
+
+    foreach ($location_config as $city => $config):
+        $section_icon  = $config['icon'];
+        $section_label = $config['label'];
+    ?>
+
     <div class="section-header">
-        <h2 class="section-title"><i class="fas fa-map-pin" style="color: var(--burgundy); margin-right: 10px;"></i>Featured in Mukono</h2>
-        <a href="#" class="view-all">View all homes <i class="fas fa-arrow-right"></i></a>
-    </div>
-
-    <!-- ========== MUKONO properties with working booking links ========= -->
-    <div class="home-grid">
-        <!-- Mukono 1 - Hillcrest Nook -->
-        <div class="home-card">
-            <div class="image-placeholder"><i class="fas fa-tree"></i><span>Photo coming soon</span></div>
-            <div class="card-content">
-                <div class="card-header">
-                    <span class="location-badge"><i class="fas fa-location-dot"></i> MUKONO</span>
-                    <div class="rating-container">
-                        <div class="stars">
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star-half-alt half"></i>
-                        </div>
-                        <span class="rating-number">4.6</span>
-                        <span class="reviews-count">(128)</span>
-                    </div>
-                </div>
-                <h3>Hillcrest Nook</h3>
-                <div class="property-location"><i class="fas fa-map-pin"></i> Kyetume lane</div>
-                
-                <div class="catchy-phrase">"Sink into cloud-like comfort after a day of adventure"</div>
-                
-                <div class="property-features">
-                    <div class="feature-item"><i class="fas fa-bed"></i> 1 king-sized bed - "where dreams begin"</div>
-                    <div class="feature-item"><i class="fas fa-wifi"></i> Lightning-fast fiber WiFi - "stream without limits"</div>
-                    <div class="feature-item"><i class="fas fa-couch"></i> Fully furnished with designer touches</div>
-                </div>
-                
-                <div class="security-badge">
-                    <i class="fas fa-shield-alt"></i> 24/7 security with CCTV
-                </div>
-                
-                <div class="price-row">
-                    <div class="price">$41 <small>night</small></div>
-                    <a href="book.php?property=hillcrest-nook&price=41&location=Mukono" class="book-now-btn"><i class="fas fa-calendar-check"></i> Book Now</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mukono 2 - Goma Springs Cottage -->
-        <div class="home-card">
-            <div class="image-placeholder"><i class="fas fa-home"></i><span>Photo coming soon</span></div>
-            <div class="card-content">
-                <div class="card-header">
-                    <span class="location-badge"><i class="fas fa-location-dot"></i> MUKONO</span>
-                    <div class="rating-container">
-                        <div class="stars">
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                        </div>
-                        <span class="rating-number">5.0</span>
-                        <span class="reviews-count">(256)</span>
-                    </div>
-                </div>
-                <h3>Goma Springs Cottage</h3>
-                <div class="property-location"><i class="fas fa-map-pin"></i> Goma road, Mukono hill</div>
-                
-                <div class="catchy-phrase">"Wake up in a bed so comfortable, you'll never want to leave"</div>
-                
-                <div class="property-features">
-                    <div class="feature-item"><i class="fas fa-bed"></i> 2 plush queen beds - "hotel luxury at home"</div>
-                    <div class="feature-item"><i class="fas fa-wifi"></i> High-speed WiFi - "perfect for remote work"</div>
-                    <div class="feature-item"><i class="fas fa-utensils"></i> Fully equipped kitchen + modern furnishings</div>
-                </div>
-                
-                <div class="security-badge">
-                    <i class="fas fa-shield-alt"></i> Gated community + night guard
-                </div>
-                
-                <div class="price-row">
-                    <div class="price">$63 <small>night</small></div>
-                    <a href="book.php?property=goma-springs&price=63&location=Mukono" class="book-now-btn"><i class="fas fa-calendar-check"></i> Book Now</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mukono 3 - Seeta Silver Studio -->
-        <div class="home-card">
-            <div class="image-placeholder"><i class="fas fa-warehouse"></i><span>Photo coming soon</span></div>
-            <div class="card-content">
-                <div class="card-header">
-                    <span class="location-badge"><i class="fas fa-location-dot"></i> MUKONO</span>
-                    <div class="rating-container">
-                        <div class="stars">
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                        </div>
-                        <span class="rating-number">5.0</span>
-                        <span class="reviews-count">(189)</span>
-                    </div>
-                </div>
-                <h3>Seeta Silver Studio</h3>
-                <div class="property-location"><i class="fas fa-map-pin"></i> Seeta</div>
-                
-                <div class="catchy-phrase">"Luxury bedding that feels like sleeping on a cloud"</div>
-                
-                <div class="property-features">
-                    <div class="feature-item"><i class="fas fa-bed"></i> Premium memory foam mattress</div>
-                    <div class="feature-item"><i class="fas fa-wifi"></i> Blazing fast WiFi - "work, stream, game"</div>
-                    <div class="feature-item"><i class="fas fa-tv"></i> Fully furnished with smart home features</div>
-                </div>
-                
-                <div class="security-badge">
-                    <i class="fas fa-shield-alt"></i> Electronic safe + secure parking
-                </div>
-                
-                <div class="price-row">
-                    <div class="price">$38 <small>night</small></div>
-                    <a href="book.php?property=seeta-silver&price=38&location=Mukono" class="book-now-btn"><i class="fas fa-calendar-check"></i> Book Now</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========== ENTEBBE properties ========= -->
-    <div class="section-header">
-        <h2 class="section-title"><i class="fas fa-water" style="color: var(--burgundy); margin-right: 10px;"></i>Entebbe lakeside retreats</h2>
+        <h2 class="section-title">
+            <i class="fas <?php echo $section_icon; ?>" style="color: var(--burgundy); margin-right: 10px;"></i>
+            <?php echo htmlspecialchars($section_label); ?>
+        </h2>
         <a href="#" class="view-all">View all homes <i class="fas fa-arrow-right"></i></a>
     </div>
 
     <div class="home-grid">
-        <!-- Entebbe 1 - Victoria Lakefront Villa -->
-        <div class="home-card">
-            <div class="image-placeholder"><i class="fas fa-water"></i><span>Photo coming soon</span></div>
-            <div class="card-content">
-                <div class="card-header">
-                    <span class="location-badge"><i class="fas fa-location-dot"></i> ENTEBBE</span>
-                    <div class="rating-container">
-                        <div class="stars">
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                        </div>
-                        <span class="rating-number">5.0</span>
-                        <span class="reviews-count">(312)</span>
-                    </div>
-                </div>
-                <h3>Victoria Lakefront Villa</h3>
-                <div class="property-location"><i class="fas fa-map-pin"></i> Kitubulu, Entebbe</div>
-                
-                <div class="catchy-phrase">"Fall asleep to the gentle lapping of Lake Victoria's waves"</div>
-                
-                <div class="property-features">
-                    <div class="feature-item"><i class="fas fa-bed"></i> Master suite with panoramic lake views</div>
-                    <div class="feature-item"><i class="fas fa-wifi"></i> High-speed Starlink WiFi throughout</div>
-                    <div class="feature-item"><i class="fas fa-umbrella-beach"></i> Fully furnished with private beach access</div>
-                </div>
-                
-                <div class="security-badge">
-                    <i class="fas fa-shield-alt"></i> Gated estate + 24/7 security patrol
-                </div>
-                
-                <div class="price-row">
-                    <div class="price">$95 <small>night</small></div>
-                    <a href="book.php?property=victoria-lakefront&price=95&location=Entebbe" class="book-now-btn"><i class="fas fa-calendar-check"></i> Book Now</a>
-                </div>
-            </div>
-        </div>
+        <?php if (!empty($grouped[$city])): ?>
 
-        <!-- Entebbe 2 - Airport View Gardens -->
-        <div class="home-card">
-            <div class="image-placeholder"><i class="fas fa-plane"></i><span>Photo coming soon</span></div>
-            <div class="card-content">
-                <div class="card-header">
-                    <span class="location-badge"><i class="fas fa-location-dot"></i> ENTEBBE</span>
-                    <div class="rating-container">
-                        <div class="stars">
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star-half-alt half"></i>
-                        </div>
-                        <span class="rating-number">4.8</span>
-                        <span class="reviews-count">(267)</span>
-                    </div>
-                </div>
-                <h3>Airport View Gardens</h3>
-                <div class="property-location"><i class="fas fa-map-pin"></i> Nakiwogo, near Entebbe Airport</div>
-                
-                <div class="catchy-phrase">"Luxury bedding awaits your arrival - just 5 minutes from the airport"</div>
-                
-                <div class="property-features">
-                    <div class="feature-item"><i class="fas fa-bed"></i> 2 premium queen beds with memory foam</div>
-                    <div class="feature-item"><i class="fas fa-wifi"></i> Fiber optic WiFi - perfect for business travelers</div>
-                    <div class="feature-item"><i class="fas fa-coffee"></i> Fully furnished with airport shuttle service</div>
-                </div>
-                
-                <div class="security-badge">
-                    <i class="fas fa-shield-alt"></i> Electronic gates + CCTV surveillance
-                </div>
-                
-                <div class="price-row">
-                    <div class="price">$82 <small>night</small></div>
-                    <a href="book.php?property=airport-view&price=82&location=Entebbe" class="book-now-btn"><i class="fas fa-calendar-check"></i> Book Now</a>
-                </div>
-            </div>
-        </div>
+            <?php foreach ($grouped[$city] as $row): ?>
+            <!-- ── SINGLE HTML CARD TEMPLATE ────────────────────────────────
+                 All data comes from $row (one database row from tbl_content).
+                 The four required milestone columns are used below:
+                   $row['id']          → unique identifier
+                   $row['title']       → property name heading
+                   $row['description'] → location / tagline text
+                   $row['image_url']   → property image (or placeholder)
+            ─────────────────────────────────────────────────────────────── -->
+            <div class="home-card">
 
-        <!-- Entebbe 3 - Botanical Beach House -->
-        <div class="home-card">
-            <div class="image-placeholder"><i class="fas fa-leaf"></i><span>Photo coming soon</span></div>
-            <div class="card-content">
-                <div class="card-header">
-                    <span class="location-badge"><i class="fas fa-location-dot"></i> ENTEBBE</span>
-                    <div class="rating-container">
-                        <div class="stars">
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star-half-alt half"></i>
+                <!-- image_url column: show real image if set, else placeholder -->
+                <?php if (!empty($row['image_url'])): ?>
+                    <img src="<?php echo htmlspecialchars($row['image_url']); ?>"
+                         alt="<?php echo htmlspecialchars($row['title']); ?>"
+                         style="width:100%;height:200px;object-fit:cover;border-bottom:3px solid var(--burgundy);">
+                <?php else: ?>
+                    <div class="image-placeholder">
+                        <i class="fas <?php echo $section_icon; ?>"></i>
+                        <span>Photo coming soon</span>
+                    </div>
+                <?php endif; ?>
+
+                <div class="card-content">
+                    <div class="card-header">
+                        <span class="location-badge">
+                            <i class="fas fa-location-dot"></i>
+                            <?php echo htmlspecialchars($row['location']); ?>
+                        </span>
+                        <div class="rating-container">
+                            <div class="stars">
+                                <?php
+                                $rating = $row['rating'];
+                                for ($i = 1; $i <= 5; $i++) {
+                                    if ($i <= $rating) {
+                                        echo '<i class="fas fa-star filled"></i>';
+                                    } elseif ($i - 0.5 <= $rating) {
+                                        echo '<i class="fas fa-star-half-alt half"></i>';
+                                    } else {
+                                        echo '<i class="far fa-star"></i>';
+                                    }
+                                }
+                                ?>
+                            </div>
+                            <span class="rating-number"><?php echo $row['rating']; ?></span>
+                            <span class="reviews-count">(<?php echo $row['reviews']; ?>)</span>
                         </div>
-                        <span class="rating-number">4.9</span>
-                        <span class="reviews-count">(198)</span>
+                    </div>
+
+                    <!-- title column -->
+                    <h3><?php echo htmlspecialchars($row['title']); ?></h3>
+
+                    <!-- description column -->
+                    <div class="property-location">
+                        <i class="fas fa-map-pin"></i>
+                        <?php echo htmlspecialchars($row['description'] ?: $row['location']); ?>
+                    </div>
+
+                    <?php if (!empty($row['tagline'])): ?>
+                        <div class="catchy-phrase">"<?php echo htmlspecialchars($row['tagline']); ?>"</div>
+                    <?php endif; ?>
+
+                    <div class="property-features">
+                        <?php
+                        $amenities = array_slice(array_map('trim', explode(',', $row['amenities'])), 0, 3);
+                        foreach ($amenities as $amenity):
+                            if (empty($amenity)) continue;
+                            $icon = 'fa-check';
+                            if (stripos($amenity, 'wifi')    !== false) $icon = 'fa-wifi';
+                            elseif (stripos($amenity, 'kitchen')  !== false) $icon = 'fa-utensils';
+                            elseif (stripos($amenity, 'parking')  !== false) $icon = 'fa-parking';
+                            elseif (stripos($amenity, 'tv')       !== false) $icon = 'fa-tv';
+                        ?>
+                            <div class="feature-item">
+                                <i class="fas <?php echo $icon; ?>"></i>
+                                <?php echo htmlspecialchars($amenity); ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div class="security-badge">
+                        <i class="fas fa-shield-alt"></i>
+                        <?php echo htmlspecialchars($row['security'] ?: '24/7 Security'); ?>
+                    </div>
+
+                    <div class="price-row">
+                        <div class="price">
+                            $<?php echo number_format($row['price'], 2); ?>
+                            <small>night</small>
+                        </div>
+                        <a href="book.php?property=<?php echo urlencode($row['slug'] ?? $row['id']); ?>&price=<?php echo $row['price']; ?>&location=<?php echo urlencode($row['location']); ?>"
+                           class="book-now-btn">
+                            <i class="fas fa-calendar-check"></i> Book Now
+                        </a>
                     </div>
                 </div>
-                <h3>Botanical Beach House</h3>
-                <div class="property-location"><i class="fas fa-map-pin"></i> Opposite Botanical Gardens, Entebbe</div>
-                
-                <div class="catchy-phrase">"Where comfortable beds meet tropical garden paradise"</div>
-                
-                <div class="property-features">
-                    <div class="feature-item"><i class="fas fa-bed"></i> 3 cozy bedrooms with garden views</div>
-                    <div class="feature-item"><i class="fas fa-wifi"></i> Mesh WiFi throughout the property</div>
-                    <div class="feature-item"><i class="fas fa-tree"></i> Fully furnished with tropical garden</div>
-                </div>
-                
-                <div class="security-badge">
-                    <i class="fas fa-shield-alt"></i> Secure compound + night guard
-                </div>
-                
-                <div class="price-row">
-                    <div class="price">$105 <small>night</small></div>
-                    <a href="book.php?property=botanical-beach&price=105&location=Entebbe" class="book-now-btn"><i class="fas fa-calendar-check"></i> Book Now</a>
-                </div>
             </div>
-        </div>
+            <!-- ── END CARD TEMPLATE ──────────────────────────────────────── -->
+            <?php endforeach; // end foreach $grouped[$city] ?>
+
+        <?php else: ?>
+            <p style="color:var(--burgundy);font-style:italic;padding:10px 0;">
+                No properties in <?php echo htmlspecialchars($city); ?> yet — add one in phpMyAdmin!
+            </p>
+        <?php endif; ?>
     </div>
 
-    <!-- ========== JINJA properties ========= -->
-    <div class="section-header">
-        <h2 class="section-title"><i class="fas fa-water" style="color: var(--burgundy); margin-right: 10px;"></i>Jinja escapes</h2>
-        <a href="#" class="view-all">View all homes <i class="fas fa-arrow-right"></i></a>
-    </div>
-
-    <div class="home-grid">
-        <!-- Jinja 1 - Kagera River Lounge -->
-        <div class="home-card">
-            <div class="image-placeholder"><i class="fas fa-campground"></i><span>Photo coming soon</span></div>
-            <div class="card-content">
-                <div class="card-header">
-                    <span class="location-badge"><i class="fas fa-location-dot"></i> JINJA</span>
-                    <div class="rating-container">
-                        <div class="stars">
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star-half-alt half"></i>
-                        </div>
-                        <span class="rating-number">4.8</span>
-                        <span class="reviews-count">(156)</span>
-                    </div>
-                </div>
-                <h3>Kagera River Lounge</h3>
-                <div class="property-location"><i class="fas fa-map-pin"></i> Bukaya, riverside</div>
-                
-                <div class="catchy-phrase">"Drift off to sleep to the gentle lullaby of the river"</div>
-                
-                <div class="property-features">
-                    <div class="feature-item"><i class="fas fa-bed"></i> Riverside king bed with organic cotton linens</div>
-                    <div class="feature-item"><i class="fas fa-wifi"></i> Starlink WiFi - "connect from paradise"</div>
-                    <div class="feature-item"><i class="fas fa-tree"></i> Fully furnished riverside deck</div>
-                </div>
-                
-                <div class="security-badge">
-                    <i class="fas fa-shield-alt"></i> 24/7 on-site caretaker + secure parking
-                </div>
-                
-                <div class="price-row">
-                    <div class="price">$81 <small>night</small></div>
-                    <a href="book.php?property=kagera-river&price=81&location=Jinja" class="book-now-btn"><i class="fas fa-calendar-check"></i> Book Now</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Jinja 2 - Rippon Falls View -->
-        <div class="home-card">
-            <div class="image-placeholder"><i class="fas fa-tree"></i><span>Photo coming soon</span></div>
-            <div class="card-content">
-                <div class="card-header">
-                    <span class="location-badge"><i class="fas fa-location-dot"></i> JINJA</span>
-                    <div class="rating-container">
-                        <div class="stars">
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                        </div>
-                        <span class="rating-number">5.0</span>
-                        <span class="reviews-count">(203)</span>
-                    </div>
-                </div>
-                <h3>Rippon Falls View</h3>
-                <div class="property-location"><i class="fas fa-map-pin"></i> Napier road</div>
-                
-                <div class="catchy-phrase">"Sleep on clouds while watching the sun rise over the Nile"</div>
-                
-                <div class="property-features">
-                    <div class="feature-item"><i class="fas fa-bed"></i> 2 premium beds with waterfall views</div>
-                    <div class="feature-item"><i class="fas fa-wifi"></i> High-speed WiFi with backup</div>
-                    <div class="feature-item"><i class="fas fa-mountain"></i> Fully furnished panoramic terrace</div>
-                </div>
-                
-                <div class="security-badge">
-                    <i class="fas fa-shield-alt"></i> Gated property + security cameras
-                </div>
-                
-                <div class="price-row">
-                    <div class="price">$110 <small>night</small></div>
-                    <a href="book.php?property=rippon-falls&price=110&location=Jinja" class="book-now-btn"><i class="fas fa-calendar-check"></i> Book Now</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Jinja 3 - Masese Palm Grove -->
-        <div class="home-card">
-            <div class="image-placeholder"><i class="fas fa-umbrella-beach"></i><span>Photo coming soon</span></div>
-            <div class="card-content">
-                <div class="card-header">
-                    <span class="location-badge"><i class="fas fa-location-dot"></i> JINJA</span>
-                    <div class="rating-container">
-                        <div class="stars">
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star filled"></i>
-                            <i class="fas fa-star-half-alt half"></i>
-                        </div>
-                        <span class="rating-number">4.7</span>
-                        <span class="reviews-count">(98)</span>
-                    </div>
-                </div>
-                <h3>Masese Palm Grove</h3>
-                <div class="property-location"><i class="fas fa-map-pin"></i> Masese</div>
-                
-                <div class="catchy-phrase">"Where comfortable beds meet tropical garden serenity"</div>
-                
-                <div class="property-features">
-                    <div class="feature-item"><i class="fas fa-bed"></i> 3 cozy beds with garden views</div>
-                    <div class="feature-item"><i class="fas fa-wifi"></i> Fast WiFi throughout the property</div>
-                    <div class="feature-item"><i class="fas fa-fire"></i> Fully furnished with outdoor BBQ</div>
-                </div>
-                
-                <div class="security-badge">
-                    <i class="fas fa-shield-alt"></i> Enclosed compound + night watchman
-                </div>
-                
-                <div class="price-row">
-                    <div class="price">$68 <small>night</small></div>
-                    <a href="book.php?property=masese-palm&price=68&location=Jinja" class="book-now-btn"><i class="fas fa-calendar-check"></i> Book Now</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php endforeach; // end foreach $location_config ?>
 
     <!-- Glassmorphism wishlist banner -->
     <div class="glass-banner">
@@ -1164,8 +959,6 @@ require 'connect.php';
         <p style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 24px;">Create an account to create wishlists and save homes you love</p>
         <a href="signup.php" style="background: var(--burgundy); color: white; padding: 14px 40px; border-radius: 40px; text-decoration: none; font-weight: 500; display: inline-block; transition: var(--transition); box-shadow: 0 4px 15px rgba(139,58,58,0.3); backdrop-filter: blur(5px); border: 1px solid rgba(247,230,208,0.2);">Sign up now</a>
     </div>
-
-    
 </div>
 
 <!-- FOOTER -->
@@ -1223,17 +1016,6 @@ require 'connect.php';
         </div>
     </div>
 </footer>
-<div class="nav-links">
-    <a href="index.php">Home</a>
-    <a href="my_bookings.php">My Bookings</a>  <!-- Add this line -->
-    <?php if(isset($_SESSION['user_id'])): ?>
-        <span class="user-tag"><i class="fas fa-user-circle"></i> <?php echo $_SESSION['username']; ?></span>
-        <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
-    <?php else: ?>
-        <a href="login.php" class="btn-burgundy"><i class="fas fa-key"></i> Login</a>
-        <a href="signup.php" class="btn-outline"><i class="fas fa-user-plus"></i> Sign Up</a>
-    <?php endif; ?>
-</div>
 
 <script>
     (function() {
